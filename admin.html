@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>
+TotalCare Admin Dashboard
+</title>
+
+<link rel="stylesheet"
+href="styles.css">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="admin-layout">
+
+    <aside
+    class="admin-sidebar"
+    id="adminSidebar">
+
+        <div class="admin-logo">
+
+            <h2>
+                TotalCare
+            </h2>
+
+            <p>
+                Admin Dashboard
+            </p>
+
+        </div>
+
+        <nav class="admin-menu">
+
+            <a
+            href="#dashboard"
+            class="active">
+
+                <i class="fa-solid fa-chart-line"></i>
+
+                Dashboard
+
+            </a>
+
+            <a
+            href="#products">
+
+                <i class="fa-solid fa-box"></i>
+
+                Products
+
+            </a>
+
+            <a
+            href="#orders">
+
+                <i class="fa-solid fa-cart-shopping"></i>
+
+                Orders
+
+            </a>
+
+            <a
+            href="#admins">
+
+                <i class="fa-solid fa-users"></i>
+
+                Admins
+
+            </a>
+
+            <a
+            href="#settings">
+
+                <i class="fa-solid fa-gear"></i>
+
+                Settings
+
+            </a>
+
+        </nav>
+
+    </aside>
+
+    <main class="admin-content">
+
+        <div class="admin-header">
+
+            <div>
+
+                <button
+                class="mobile-toggle"
+                id="menuToggle">
+
+                    <i class="fa-solid fa-bars"></i>
+
+                </button>
+
+                <h1>
+                    Dashboard
+                </h1>
+
+            </div>
+
+            <div>
+
+                <button
+                id="logoutBtn"
+                class="delete-btn">
+
+                    <i class="fa-solid fa-right-from-bracket"></i>
+
+                    Logout
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <div
+        id="firebaseStatus"
+        class="firebase-status firebase-online">
+
+            <i class="fa-solid fa-circle-check"></i>
+
+            Connected to Firebase
+
+        </div>
+
+        <section
+        id="dashboard">
+
+            <div
+            class="analytics-grid">
+
+                <div
+                class="analytics-card">
+
+                    <div>
+
+                        <h3>
+                            Products
+                        </h3>
+
+                        <div
+                        class="value"
+                        id="productCount">
+
+                            0
+
+                        </div>
+
+                    </div>
+
+                    <i
+                    class="fa-solid fa-box"></i>
+
+                </div>
+
+                <div
+                class="analytics-card">
+
+                    <div>
+
+                        <h3>
+                            Orders
+                        </h3>
+
+                        <div
+                        class="value"
+                        id="orderCount">
+
+                            0
+
+                        </div>
+
+                    </div>
+
+                    <i
+                    class="fa-solid fa-cart-shopping"></i>
+
+                </div>
+
+                <div
+                class="analytics-card">
+
+                    <div>
+
+                        <h3>
+                            Revenue
+                        </h3>
+
+                        <div
+                        class="value"
+                        id="revenue">
+
+                            KES 0
+
+                        </div>
+
+                    </div>
+
+                    <i
+                    class="fa-solid fa-sack-dollar"></i>
+
+                </div>
+
+                <div
+                class="analytics-card">
+
+                    <div>
+
+                        <h3>
+                            Pending Orders
+                        </h3>
+
+                        <div
+                        class="value"
+                        id="pendingOrders">
+
+                            0
+
+                        </div>
+
+                    </div>
+
+                    <i
+                    class="fa-solid fa-clock"></i>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <section
+        id="products"
+        class="admin-section">
+
+            <h2>
+
+                <i class="fa-solid fa-box"></i>
+
+                Product Management
+
+            </h2>
+
+            <div class="admin-search">
+
+                <input
+                type="text"
+                id="productSearch"
+                placeholder="Search products...">
+
+            </div>
+
+            <form
+            id="productForm"
+            class="product-form">
+
+                <input
+                type="text"
+                id="productName"
+                placeholder="Product Name"
+                required>
+
+                <select
+                id="productCategory"
+                required>
+
+                    <option value="">
+                        Select Category
+                    </option>
+
+                    <option value="Parts">
+                        Parts
+                    </option>
+
+                    <option value="Maintenance">
+                        Maintenance
+                    </option>
+
+                    <option value="Repairs">
+                        Repairs
+                    </option>
+
+                    <option value="Accessories">
+                        Accessories
+                    </option>
+
+                    <option value="Tools">
+                        Tools
+                    </option>
+
+                </select>
+
+                <input
+                type="number"
+                id="productPrice"
+                placeholder="Price (KES)"
+                min="0"
+                required>
+
+                <input
+                type="number"
+                id="productStock"
+                placeholder="Stock Quantity"
+                min="0"
+                required>
+
+                <textarea
+                id="productDescription"
+                placeholder="Product Description"></textarea>
+
+                <label>
+
+                    Product Images
+
+                </label>
+
+                <input
+                type="file"
+                id="productImages"
+                multiple
+                accept="image/*">
+
+                <div
+                id="imagePreview"
+                class="image-preview">
+
+                </div>
+
+                <input
+                type="hidden"
+                id="productId">
+
+                <button
+                type="submit"
+                id="saveProductBtn">
+
+                    <i class="fa-solid fa-floppy-disk"></i>
+
+                    Save Product
+
+                </button>
+
+            </form>
+
+        </section>
+
+        <section
+        class="admin-section">
+
+            <h2>
+
+                <i class="fa-solid fa-table"></i>
+
+                Product Inventory
+
+            </h2>
+
+            <div
+            class="table-container">
+
+                <table
+                class="admin-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Image
+                            </th>
+
+                            <th>
+                                Name
+                            </th>
+
+                            <th>
+                                Category
+                            </th>
+
+                            <th>
+                                Price
+                            </th>
+
+                            <th>
+                                Stock
+                            </th>
+
+                            <th>
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody
+                    id="productTableBody">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+        <section
+        id="orders"
+        class="admin-section">
+
+            <h2>
+
+                <i class="fa-solid fa-cart-shopping"></i>
+
+                Orders Management
+
+            </h2>
+
+            <div class="admin-search">
+
+                <input
+                type="text"
+                id="orderSearch"
+                placeholder="Search by customer name, phone, or order ID">
+
+            </div>
+
+            <div
+            class="table-container">
+
+                <table
+                class="admin-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Order ID
+                            </th>
+
+                            <th>
+                                Customer
+                            </th>
+
+                            <th>
+                                Phone
+                            </th>
+
+                            <th>
+                                Items
+                            </th>
+
+                            <th>
+                                Total
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th>
+                                Date
+                            </th>
+
+                            <th>
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody
+                    id="ordersTableBody">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+        <div
+        id="orderModal"
+        class="admin-modal">
+
+            <div
+            class="admin-modal-content">
+
+                <h2>
+
+                    Order Details
+
+                </h2>
+
+                <div
+                id="orderDetails">
+
+                </div>
+
+                <br>
+
+                <button
+                id="closeOrderModal"
+                class="delete-btn">
+
+                    Close
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <section
+        class="admin-section">
+
+            <h2>
+
+                <i class="fa-solid fa-chart-column"></i>
+
+                Revenue Summary
+
+            </h2>
+
+            <div
+            class="analytics-grid">
+
+                <div
+                class="analytics-card">
+
+                    <div>
+
+                        <h3>
+
+                            Today's Revenue
+
+                        </h3>
+
+                        <div
+                        class="value"
+                        id="todayRevenue">
+
+                            KES 0
+
+                        </div>
+
+                    </div>
+
+                    <i
+                    class="fa-solid fa-calendar-day"></i>
+
+                </div>
+
+                <div
+                class="analytics-card">
+
+                    <div>
+
+                        <h3>
+
+                            Monthly Revenue
+
+                        </h3>
+
+                        <div
+                        class="value"
+                        id="monthlyRevenue">
+
+                            KES 0
+
+                        </div>
+
+                    </div>
+
+                    <i
+                    class="fa-solid fa-calendar"></i>
+
+                </div>
+
+                <div
+                class="analytics-card">
+
+                    <div>
+
+                        <h3>
+
+                            Completed Orders
+
+                        </h3>
+
+                        <div
+                        class="value"
+                        id="completedOrders">
+
+                            0
+
+                        </div>
+
+                    </div>
+
+                    <i
+                    class="fa-solid fa-circle-check"></i>
+
+                </div>
+
+                <div
+                class="analytics-card">
+
+                    <div>
+
+                        <h3>
+
+                            Cancelled Orders
+
+                        </h3>
+
+                        <div
+                        class="value"
+                        id="cancelledOrders">
+
+                            0
+
+                        </div>
+
+                    </div>
+
+                    <i
+                    class="fa-solid fa-circle-xmark"></i>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <section
+        id="admins"
+        class="admin-section">
+
+            <h2>
+
+                <i class="fa-solid fa-users"></i>
+
+                Admin Management
+
+            </h2>
+
+            <p style="margin-bottom:20px;color:#666;">
+
+                Manage multiple administrators who can access
+                the TotalCare dashboard.
+
+            </p>
+
+            <form
+            id="adminForm"
+            class="product-form">
+
+                <input
+                type="text"
+                id="adminName"
+                placeholder="Admin Name"
+                required>
+
+                <input
+                type="email"
+                id="adminEmail"
+                placeholder="Admin Email"
+                required>
+
+                <select
+                id="adminRole"
+                required>
+
+                    <option value="">
+                        Select Role
+                    </option>
+
+                    <option value="superadmin">
+                        Super Admin
+                    </option>
+
+                    <option value="admin">
+                        Admin
+                    </option>
+
+                </select>
+
+                <button
+                type="submit">
+
+                    <i class="fa-solid fa-user-plus"></i>
+
+                    Add Admin
+
+                </button>
+
+            </form>
+
+            <br>
+
+            <div
+            class="table-container">
+
+                <table
+                class="admin-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Name
+                            </th>
+
+                            <th>
+                                Email
+                            </th>
+
+                            <th>
+                                Role
+                            </th>
+
+                            <th>
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody
+                    id="adminTableBody">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+        <section
+        id="settings"
+        class="admin-section">
+
+            <h2>
+
+                <i class="fa-solid fa-gear"></i>
+
+                Store Settings
+
+            </h2>
+
+            <div class="product-form">
+
+                <input
+                type="text"
+                id="storeName"
+                placeholder="Store Name"
+                value="TotalCare Engineering Services">
+
+                <input
+                type="text"
+                id="storePhone"
+                placeholder="WhatsApp Number"
+                value="+254741675601">
+
+                <input
+                type="email"
+                id="storeEmail"
+                placeholder="Store Email">
+
+                <textarea
+                id="storeDescription"
+                placeholder="Store Description"></textarea>
+
+                <button
+                id="saveSettingsBtn"
+                type="button">
+
+                    <i class="fa-solid fa-floppy-disk"></i>
+
+                    Save Settings
+
+                </button>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<div
+id="loaderOverlay"
+class="loader-overlay"
+style="display:none;">
+
+    <div class="loader"></div>
+
+</div>
+
+<div
+id="toastContainer">
+</div>
+
+<div
+id="deleteModal"
+class="admin-modal">
+
+    <div
+    class="admin-modal-content">
+
+        <h2>
+
+            Confirm Delete
+
+        </h2>
+
+        <p>
+
+            Are you sure you want to delete this item?
+
+        </p>
+
+        <br>
+
+        <div
+        class="action-buttons">
+
+            <button
+            id="confirmDeleteBtn"
+            class="delete-btn">
+
+                Delete
+
+            </button>
+
+            <button
+            id="cancelDeleteBtn"
+            class="view-btn">
+
+                Cancel
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script type="module">
+
+import {
+    auth
+}
+from "./js/firebase-config.js";
+
+import {
+    onAuthStateChanged,
+    signOut
+}
+from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+onAuthStateChanged(
+
+    auth,
+
+    (user)=>{
+
+        if(!user){
+
+            window.location.href =
+            "login.html";
+        }
+
+    }
+
+);
+
+document
+.getElementById(
+    "logoutBtn"
+)
+.addEventListener(
+
+    "click",
+
+    async ()=>{
+
+        await signOut(auth);
+
+        localStorage.removeItem(
+            "adminEmail"
+        );
+
+        localStorage.removeItem(
+            "adminRole"
+        );
+
+        window.location.href =
+        "login.html";
+
+    }
+
+);
+
+</script>
+
+<script
+type="module"
+src="js/admin.js">
+</script>
+
+</body>
+</html>
