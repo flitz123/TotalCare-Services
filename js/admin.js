@@ -1780,10 +1780,11 @@ if(adminForm){
                 )
                 .value;
 
-                await addDoc(
-                    collection(
+                await setDoc(
+                    doc(
                         db,
-                        "admins"
+                        "admins",
+                        email
                     ),
                     {
                         name,

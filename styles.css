@@ -1932,6 +1932,22 @@ footer{
     background:var(--primary-light);
 }
 
+#googleSignInBtn {
+    background: white;
+    border: 1px solid #ddd;
+    transition: all 0.3s ease;
+}
+
+#googleSignInBtn:hover {
+    border-color: var(--primary);
+    background: #f9f9f9;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+#googleSignInBtn:active {
+    transform: scale(0.98);
+}
+
 
 
 .admin-layout{

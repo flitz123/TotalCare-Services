@@ -4,7 +4,7 @@ from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getFirestore }
 from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-import { getAuth }
+import { getAuth, GoogleAuthProvider }
 from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
 import { getStorage }
@@ -26,3 +26,5 @@ export const db = getFirestore(app);
 export const auth = getAuth(app);
 
 export const storage = getStorage(app);
+
+export const googleProvider = new GoogleAuthProvider();

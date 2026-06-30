@@ -48,6 +48,14 @@ rel="stylesheet">
 
         </form>
 
+        <div style="margin-top: 20px; text-align: center;">
+            <p style="color: #666; margin-bottom: 15px;">Or sign in with:</p>
+            <button type="button" id="googleSignInBtn" style="width: 100%; padding: 12px; background: white; border: 1px solid #ddd; border-radius: 10px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; color: #333; transition: all 0.3s;">
+                <i class="fa-brands fa-google"></i>
+                Sign in with Google
+            </button>
+        </div>
+
         <p style="margin-top:15px;text-align:center;color:#666;">
             Authorized administrators only.
         </p>
@@ -68,16 +76,18 @@ rel="stylesheet">
 
 import {
     auth,
-    db
+    db,
+    googleProvider
 } from "./js/firebase-config.js";
 
 import {
-    signInWithEmailAndPassword
+    signInWithEmailAndPassword,
+    signInWithPopup
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
 import {
-    collection,
-    getDocs
+    doc,
+    getDoc
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const form =
@@ -86,6 +96,76 @@ document.getElementById("loginForm");
 const message =
 document.getElementById("loginMessage");
 
+const googleSignInBtn =
+document.getElementById("googleSignInBtn");
+
+// Common function to check admin and login
+const handleAdminLogin = async (email, name = null) => {
+    try {
+        const adminSnapshot =
+            await getDoc(
+                doc(
+                    db,
+                    "admins",
+                    email.toLowerCase()
+                )
+            );
+
+        const isAdmin =
+            adminSnapshot.exists();
+
+        if(!isAdmin){
+            message.style.color = "red";
+            message.textContent = "Access denied.";
+            return false;
+        }
+
+        const admin =
+            isAdmin
+            ? adminSnapshot.data()
+            : {};
+
+        const role =
+            admin.role || "admin";
+
+        localStorage.setItem(
+            "adminRole",
+            role
+        );
+
+        localStorage.setItem(
+            "adminEmail",
+            email
+        );
+
+        if(name){
+            localStorage.setItem(
+                "adminName",
+                name
+            );
+        }
+
+        message.style.color =
+            "green";
+
+        message.textContent =
+            "Login successful...";
+
+        setTimeout(()=>{
+            window.location.href =
+                "admin.html";
+        }, 1000);
+
+        return true;
+    } catch (error) {
+        console.error("Admin check error:", error);
+        message.style.color = "red";
+        message.textContent = "An error occurred. Please try again.";
+        return false;
+    }
+};
+
+// Email/Password Sign In
 form.addEventListener(
     "submit",
     async (e)=>{
@@ -103,6 +183,9 @@ form.addEventListener(
 
         try{
 
+            message.textContent = "Signing in...";
+            message.style.color = "#666";
+
             const userCredential =
             await signInWithEmailAndPassword(
                 auth,
@@ -110,63 +193,7 @@ form.addEventListener(
                 password
             );
 
-            const adminsSnapshot =
-            await getDocs(
-                collection(db,"admins")
-            );
-
-            let isAdmin = false;
-            let role = "";
-
-            adminsSnapshot.forEach(doc=>{
-
-                const admin =
-                doc.data();
-
-                if(
-                    admin.email &&
-                    admin.email.toLowerCase() ===
-                    email.toLowerCase()
-                ){
-                    isAdmin = true;
-                    role = admin.role || "admin";
-                }
-
-            });
-
-            if(!isAdmin){
-
-                message.style.color =
-                "red";
-
-                message.textContent =
-                "Access denied.";
-
-                return;
-            }
-
-            localStorage.setItem(
-                "adminRole",
-                role
-            );
-
-            localStorage.setItem(
-                "adminEmail",
-                email
-            );
-
-            message.style.color =
-            "green";
-
-            message.textContent =
-            "Login successful...";
-
-            setTimeout(()=>{
-
-                window.location.href =
-                "admin.html";
-
-            },1000);
+            await handleAdminLogin(email);
 
         }
         catch(error){
@@ -177,10 +204,49 @@ form.addEventListener(
             "red";
 
             message.textContent =
-            "Invalid email or password.";
+            error.code === "auth/user-not-found" 
+                ? "User not found."
+                : error.code === "auth/wrong-password"
+                ? "Wrong password."
+                : "Invalid email or password.";
 
         }
 
+    }
+);
+
+// Google Sign In
+googleSignInBtn.addEventListener(
+    "click",
+    async ()=>{
+
+        try {
+            message.textContent = "Signing in with Google...";
+            message.style.color = "#666";
+
+            const result = 
+                await signInWithPopup(auth, googleProvider);
+            
+            const user = result.user;
+            const email = user.email.toLowerCase();
+            const displayName = user.displayName;
+
+            await handleAdminLogin(email, displayName);
+
+        } catch (error) {
+            console.error("Google Sign-In Error:", error);
+            message.style.color = "red";
+            
+            if(error.code === "auth/popup-blocked"){
+                message.textContent = "Sign-in popup was blocked. Please allow popups and try again.";
+            }
+            else if(error.code === "auth/cancelled-popup-request"){
+                message.textContent = "Sign-in was cancelled.";
+            }
+            else{
+                message.textContent = "Google Sign-In failed. Please try again.";
+            }
+        }
     }
 );
 
