@@ -1,4 +1,6 @@
 {
+  "version": 2,
+  "framework": "static",
   "cleanUrls": true,
   "trailingSlash": false
 }
