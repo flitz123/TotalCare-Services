@@ -9,7 +9,7 @@
     "rules": "storage.rules"
   },
   "hosting": {
-    "public": "flitz123/TotalCare-Services",
+    "public": ".",
     "ignore": [
       "firebase.json",
       "**/.*",
