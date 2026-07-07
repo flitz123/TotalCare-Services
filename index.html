@@ -68,7 +68,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
 
     </div>
 
-    <ul>
+    <ul id="navMenu">
 
         <li><a href="#home">Home</a></li>
 
@@ -83,6 +83,10 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     </ul>
 
     <div class="nav-actions">
+
+        <button id="mobileMenuBtn" class="mobile-toggle" aria-label="Toggle navigation">
+            <i class="fa-solid fa-bars"></i>
+        </button>
 
         <button id="cartBtn">
 
@@ -451,6 +455,50 @@ form.reset();
 }
 );
 
+</script>
+
+<script>
+const navMenu = document.getElementById("navMenu");
+const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+
+if (mobileMenuBtn && navMenu) {
+    const menuIcon = mobileMenuBtn.querySelector("i");
+
+    mobileMenuBtn.addEventListener("click", () => {
+        navMenu.classList.toggle("active");
+        if (navMenu.classList.contains("active")) {
+            menuIcon.classList.remove("fa-bars");
+            menuIcon.classList.add("fa-xmark");
+        } else {
+            menuIcon.classList.remove("fa-xmark");
+            menuIcon.classList.add("fa-bars");
+        }
+    });
+
+    document.addEventListener("click", (event) => {
+        if (
+            navMenu.classList.contains("active") &&
+            !navMenu.contains(event.target) &&
+            event.target !== mobileMenuBtn &&
+            !mobileMenuBtn.contains(event.target)
+        ) {
+            navMenu.classList.remove("active");
+            menuIcon.classList.remove("fa-xmark");
+            menuIcon.classList.add("fa-bars");
+        }
+    });
+
+    const navLinks = navMenu.querySelectorAll("a");
+    navLinks.forEach((link) => {
+        link.addEventListener("click", () => {
+            if (navMenu.classList.contains("active")) {
+                navMenu.classList.remove("active");
+                menuIcon.classList.remove("fa-xmark");
+                menuIcon.classList.add("fa-bars");
+            }
+        });
+    });
+}
 </script>
 
 <script>
