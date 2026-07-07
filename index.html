@@ -92,7 +92,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
 
         </button>
 
-        <a href="login.html" class="admin-link">
+        <a id="adminLink" href="login.html" class="admin-link" style="display:none;">
             Admin
         </a>
 
@@ -393,6 +393,39 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
 </footer>
 
 <script type="module" src="js/firebase-config.js"></script>
+
+<script type="module">
+import { auth, db } from "./js/firebase-config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+const adminLink = document.getElementById("adminLink");
+
+if (adminLink) {
+    adminLink.style.display = "none";
+
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+            adminLink.style.display = "none";
+            return;
+        }
+
+        try {
+            const adminSnapshot = await getDoc(doc(db, "admins", user.email.toLowerCase()));
+
+            if (adminSnapshot.exists()) {
+                adminLink.style.display = "";
+                adminLink.href = "admin.html";
+            } else {
+                adminLink.style.display = "none";
+            }
+        } catch (error) {
+            console.error("Admin auth check failed:", error);
+            adminLink.style.display = "none";
+        }
+    });
+}
+</script>
 
 <script type="module" src="js/store.js"></script>
 

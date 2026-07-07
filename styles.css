@@ -2607,3 +2607,85 @@ footer{
         height:180px;
     }
 }
+
+/* Additional mobile tweaks */
+@media (max-width:600px) {
+
+    nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px;
+    }
+
+    .logo-area h2 {
+        font-size: 1.1rem;
+    }
+
+    nav ul {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        margin-top: 8px;
+    }
+
+    .nav-actions {
+        gap: 8px;
+    }
+
+    .hero {
+        padding: 100px 16px;
+    }
+
+    .hero-left,
+    .hero-right {
+        width: 100%;
+        text-align: center;
+    }
+
+    .hero-left img {
+        width: 180px;
+        height: 180px;
+        object-fit: cover;
+        margin: 0 auto;
+    }
+
+    .section {
+        padding: 50px 12px;
+    }
+
+    .product-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .store-card,
+    .product-card {
+        padding: 12px;
+    }
+
+    .cart-sidebar {
+        position: fixed;
+        bottom: 0;
+        right: 0;
+        left: 0;
+        height: auto;
+        border-radius: 12px 12px 0 0;
+        max-height: 60vh;
+        overflow: auto;
+    }
+
+    .admin-link {
+        padding: 8px 12px;
+    }
+
+    button {
+        touch-action: manipulation;
+    }
+
+    footer p {
+        text-align: center;
+        font-size: 0.9rem;
+    }
+
+}
