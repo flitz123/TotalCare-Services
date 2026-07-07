@@ -401,7 +401,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
 <script type="module">
 import { auth, db } from "./js/firebase-config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { collection, doc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const adminLink = document.getElementById("adminLink");
 
@@ -415,9 +415,20 @@ if (adminLink) {
         }
 
         try {
-            const adminSnapshot = await getDoc(doc(db, "admins", user.email.toLowerCase()));
+            const lowerEmail = user.email.toLowerCase();
+            const directDoc = await getDoc(doc(db, "admins", lowerEmail));
+            let adminSnapshot = directDoc;
 
-            if (adminSnapshot.exists()) {
+            if (!directDoc.exists()) {
+                const emailQuery = query(
+                    collection(db, "admins"),
+                    where("email", "==", lowerEmail)
+                );
+                const querySnapshot = await getDocs(emailQuery);
+                adminSnapshot = querySnapshot.docs.length > 0 ? querySnapshot.docs[0] : null;
+            }
+
+            if (adminSnapshot && adminSnapshot.exists()) {
                 adminLink.style.display = "";
                 adminLink.href = "admin.html";
             } else {

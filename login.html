@@ -86,8 +86,12 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
 import {
+    collection,
     doc,
-    getDoc
+    getDoc,
+    getDocs,
+    query,
+    where
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const form =
@@ -100,21 +104,28 @@ const googleSignInBtn =
 document.getElementById("googleSignInBtn");
 
 // Common function to check admin and login
+const getAdminSnapshotByEmail = async (email) => {
+    const lowerEmail = email.toLowerCase();
+    const directDoc = await getDoc(doc(db, "admins", lowerEmail));
+    if (directDoc.exists()) {
+        return directDoc;
+    }
+
+    const emailQuery = query(
+        collection(db, "admins"),
+        where("email", "==", lowerEmail)
+    );
+
+    const querySnapshot = await getDocs(emailQuery);
+    return querySnapshot.docs.length > 0 ? querySnapshot.docs[0] : null;
+};
+
 const handleAdminLogin = async (email, name = null) => {
     try {
-        const adminSnapshot =
-            await getDoc(
-                doc(
-                    db,
-                    "admins",
-                    email.toLowerCase()
-                )
-            );
+        const adminSnapshot = await getAdminSnapshotByEmail(email);
+        const isAdmin = adminSnapshot && adminSnapshot.exists();
 
-        const isAdmin =
-            adminSnapshot.exists();
-
-        if(!isAdmin){
+        if (!isAdmin) {
             message.style.color = "red";
             message.textContent = "Access denied.";
             return false;
@@ -243,8 +254,11 @@ googleSignInBtn.addEventListener(
             else if(error.code === "auth/cancelled-popup-request"){
                 message.textContent = "Sign-in was cancelled.";
             }
+            else if(error.code === "auth/unauthorized-domain"){
+                message.textContent = "This domain is not authorized for Google sign-in. Add your site domain in Firebase Auth settings.";
+            }
             else{
-                message.textContent = "Google Sign-In failed. Please try again.";
+                message.textContent = `Google Sign-In failed: ${error.message || error.code}`;
             }
         }
     }
