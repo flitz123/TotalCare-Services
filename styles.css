@@ -2461,6 +2461,40 @@ footer{
         gap:15px;
     }
 
+    nav ul{
+
+        display:none;
+
+        width:100%;
+
+        flex-direction:column;
+
+        gap:0;
+
+        align-items:center;
+
+        justify-content:flex-start;
+    }
+
+    nav ul.active{
+
+        display:flex;
+    }
+
+    nav ul li{
+
+        width:100%;
+
+        text-align:center;
+    }
+
+    nav ul li a{
+
+        width:100%;
+
+        padding:12px 0;
+    }
+
     .hero{
 
         text-align:center;
