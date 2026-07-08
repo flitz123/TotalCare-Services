@@ -82,8 +82,11 @@ import {
 
 import {
     signInWithEmailAndPassword,
-    signInWithPopup
+    signInWithPopup,
+    getIdToken
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+import { verifyIdToken } from "./js/verifyClient.js";
 
 import {
     collection,
@@ -204,6 +207,17 @@ form.addEventListener(
                 password
             );
 
+            // verify ID token with server
+            try {
+                const idToken = await getIdToken(userCredential.user);
+                await verifyIdToken(idToken);
+            } catch (vErr) {
+                console.error('Server token verification failed:', vErr);
+                message.style.color = 'red';
+                message.textContent = 'Server verification failed. Try again later.';
+                return;
+            }
+
             await handleAdminLogin(email);
 
         }
@@ -241,6 +255,17 @@ googleSignInBtn.addEventListener(
             const user = result.user;
             const email = user.email.toLowerCase();
             const displayName = user.displayName;
+
+            // verify ID token with server
+            try {
+                const idToken = await getIdToken(user);
+                await verifyIdToken(idToken);
+            } catch (vErr) {
+                console.error('Server token verification failed:', vErr);
+                message.style.color = 'red';
+                message.textContent = 'Server verification failed. Try again later.';
+                return;
+            }
 
             await handleAdminLogin(email, displayName);
 

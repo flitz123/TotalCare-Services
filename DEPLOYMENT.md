@@ -32,3 +32,15 @@ python -m http.server 8000
 ```
 
 Then open http://localhost:8000
+
+## Serverless / Firebase Admin setup (for Vercel)
+
+If you use the serverless verification endpoint (`api/verifyToken.js`), you must provide a Firebase service account JSON to the deployment environment.
+
+1. Generate a service account JSON in Firebase Console → Project Settings → Service accounts → Generate new private key.
+2. In the Vercel dashboard, open your project → Settings → Environment Variables and add:
+   - Name: `FIREBASE_SERVICE_ACCOUNT`
+   - Value: (paste the entire service account JSON)
+   - Environment: `Production` (and `Preview` if desired)
+
+For local development only: you may place the service account JSON file in the project root (filename must include `firebase-adminsdk`). The serverless function will load it automatically when `NODE_ENV` is not `production`.

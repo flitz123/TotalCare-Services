@@ -25,6 +25,7 @@ pnpm-debug.log*
 .idea/
 .DS_Store
 Thumbs.db
+totalcare-services-firebase-adminsdk-fbsvc-6e246dac50.json
 
 .vercel
 .env*.local
