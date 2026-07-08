@@ -4,6 +4,7 @@
 !.env.example
 secret.env
 secret.API Key
+firebase-adminsdk*.json
 
 # Dependencies
 node_modules/
@@ -25,7 +26,6 @@ pnpm-debug.log*
 .idea/
 .DS_Store
 Thumbs.db
-firebase-adminsdk.json
 
 .vercel
 .env*.local
