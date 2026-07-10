@@ -116,7 +116,7 @@ onAuthStateChanged(
         if(!user){
 
             window.location.href =
-            "login.html";
+            "/login.html";
 
             return;
         }
