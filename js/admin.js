@@ -121,13 +121,15 @@ onAuthStateChanged(
             return;
         }
 
-        initializeDashboard();
+        await initializeDashboard();
 
     }
 
 );
 
-function initializeDashboard(){
+async function initializeDashboard(){
+
+    await ensureCurrentAdminDoc();
 
     loadProducts();
 
@@ -138,6 +140,40 @@ function initializeDashboard(){
     setupSearch();
 
     setupSidebar();
+
+}
+
+async function ensureCurrentAdminDoc(){
+
+    const user = auth.currentUser;
+
+    if(!user?.email){
+        return;
+    }
+
+    const normalizedEmail = user.email.trim().toLowerCase();
+
+    try{
+
+        await setDoc(
+            doc(db, "admins", normalizedEmail),
+            {
+                name: user.displayName || normalizedEmail,
+                email: normalizedEmail,
+                role: "admin",
+                active: true,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+            },
+            { merge: true }
+        );
+
+    }
+    catch(error){
+
+        console.warn("Unable to sync admin record:", error);
+
+    }
 
 }
 
@@ -707,8 +743,31 @@ if(productForm){
 
 async function createProduct(){
 
-    const imageUrls =
-    await uploadImages();
+    let imageUrls = [];
+
+    if(selectedFiles.length){
+
+        try{
+
+            imageUrls =
+            await uploadImages();
+
+        }
+        catch(error){
+
+            console.warn(
+                "Image upload failed. Saving product without images.",
+                error
+            );
+
+            showToast(
+                "Image upload failed. Product saved without images.",
+                "error"
+            );
+
+        }
+
+    }
 
     const product = {
 
@@ -804,8 +863,25 @@ async function updateProduct(){
         selectedFiles.length
     ){
 
-        imageUrls =
-        await uploadImages();
+        try{
+
+            imageUrls =
+            await uploadImages();
+
+        }
+        catch(error){
+
+            console.warn(
+                "Image upload failed while updating product.",
+                error
+            );
+
+            showToast(
+                "Image upload failed. Product updated without new images.",
+                "error"
+            );
+
+        }
     }
 
     const payload = {

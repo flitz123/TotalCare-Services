@@ -22,6 +22,11 @@ service cloud.firestore {
         && adminId == authEmail();
     }
 
+    function canManageAdmins() {
+      return signedIn()
+        && (isOwnAdminDoc(request.resource.id) || isAdmin());
+    }
+
     function validOrderCreate() {
       return request.resource.data.keys().hasOnly([
         "customerName",
@@ -51,7 +56,10 @@ service cloud.firestore {
     match /admins/{adminId} {
       allow get: if isOwnAdminDoc(adminId) || isAdmin();
       allow list: if isAdmin();
-      allow create, update, delete: if isAdmin();
+      allow create: if signedIn()
+        && request.resource.id == authEmail()
+        && request.resource.data.email == authEmail();
+      allow update, delete: if isOwnAdminDoc(adminId) || isAdmin();
     }
 
     match /settings/{settingId} {
