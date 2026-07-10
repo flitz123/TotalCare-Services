@@ -95,6 +95,24 @@ nav{
     align-items:center;
 
     gap:12px;
+    color:white;
+}
+
+.logo-area .admin-link{
+    color:white;
+    border:1px solid white;
+    padding:8px 14px;
+    border-radius:30px;
+    transition:.3s;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    margin-left:8px;
+}
+
+.logo-area .admin-link:hover{
+    background:white;
+    color:var(--primary);
 }
 
 .logo-area img{
