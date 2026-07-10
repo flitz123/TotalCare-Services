@@ -60,13 +60,13 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
 
 <nav>
 
-    <a href="/login.html" class="logo-area" id="adminLink" style="display:none;">
+    <a href="/login.html" class="logo-area" id="adminLink">
 
         <img src="/assets/Logo.jpeg" alt="TotalCare Logo">
 
         <h2>TotalCare</h2>
 
-        <span class="admin-link">Admin</span>
+        <span id="adminBadge" class="admin-link">Admin</span>
 
     </a>
 
@@ -402,13 +402,21 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/fi
 import { collection, doc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const adminLink = document.getElementById("adminLink");
+const adminBadge = document.getElementById("adminBadge");
 
 if (adminLink) {
-    adminLink.style.display = "none";
+    adminLink.href = "/login.html";
+
+    if (adminBadge) {
+        adminBadge.textContent = "Admin";
+    }
 
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
-            adminLink.style.display = "none";
+            adminLink.href = "/login.html";
+            if (adminBadge) {
+                adminBadge.textContent = "Admin";
+            }
             return;
         }
 
@@ -427,14 +435,22 @@ if (adminLink) {
             }
 
             if (adminSnapshot && adminSnapshot.exists()) {
-                adminLink.style.display = "";
                 adminLink.href = "/admin.html";
+                if (adminBadge) {
+                    adminBadge.textContent = "Dashboard";
+                }
             } else {
-                adminLink.style.display = "none";
+                adminLink.href = "/login.html";
+                if (adminBadge) {
+                    adminBadge.textContent = "Admin";
+                }
             }
         } catch (error) {
             console.error("Admin auth check failed:", error);
-            adminLink.style.display = "none";
+            adminLink.href = "/login.html";
+            if (adminBadge) {
+                adminBadge.textContent = "Admin";
+            }
         }
     });
 }
