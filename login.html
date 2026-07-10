@@ -114,13 +114,28 @@ const getAdminSnapshotByEmail = async (email) => {
         return directDoc;
     }
 
+    // Try a direct field lookup for lowercase email first.
     const emailQuery = query(
         collection(db, "admins"),
         where("email", "==", lowerEmail)
     );
 
-    const querySnapshot = await getDocs(emailQuery);
-    return querySnapshot.docs.length > 0 ? querySnapshot.docs[0] : null;
+    let querySnapshot = await getDocs(emailQuery);
+    if (querySnapshot.docs.length > 0) {
+        return querySnapshot.docs[0];
+    }
+
+    // Fall back to a case-insensitive match if the stored email casing differs.
+    const allAdminsSnapshot = await getDocs(collection(db, "admins"));
+    const matchingDoc = allAdminsSnapshot.docs.find((docSnap) => {
+        const adminData = docSnap.data();
+        return (
+            adminData.email &&
+            adminData.email.toString().toLowerCase() === lowerEmail
+        );
+    });
+
+    return matchingDoc || null;
 };
 
 const handleAdminLogin = async (email, name = null) => {
@@ -130,7 +145,7 @@ const handleAdminLogin = async (email, name = null) => {
 
         if (!isAdmin) {
             message.style.color = "red";
-            message.textContent = "Access denied.";
+            message.textContent = "Access denied. Your account is not authorized in Firestore admins.";
             return false;
         }
 
