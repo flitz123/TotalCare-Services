@@ -89,14 +89,8 @@ import {
 import { verifyIdToken } from "./js/verifyClient.js";
 
 import {
-    collection,
     doc,
-    getDoc,
-    getDocs,
-    query,
-    serverTimestamp,
-    setDoc,
-    where
+    getDoc
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const form =
@@ -112,32 +106,12 @@ document.getElementById("googleSignInBtn");
 const getAdminSnapshotByEmail = async (email) => {
     const lowerEmail = email.toLowerCase();
     const directDoc = await getDoc(doc(db, "admins", lowerEmail));
+
     if (directDoc.exists()) {
         return directDoc;
     }
 
-    // Try a direct field lookup for lowercase email first.
-    const emailQuery = query(
-        collection(db, "admins"),
-        where("email", "==", lowerEmail)
-    );
-
-    let querySnapshot = await getDocs(emailQuery);
-    if (querySnapshot.docs.length > 0) {
-        return querySnapshot.docs[0];
-    }
-
-    // Fall back to a case-insensitive match if the stored email casing differs.
-    const allAdminsSnapshot = await getDocs(collection(db, "admins"));
-    const matchingDoc = allAdminsSnapshot.docs.find((docSnap) => {
-        const adminData = docSnap.data();
-        return (
-            adminData.email &&
-            adminData.email.toString().toLowerCase() === lowerEmail
-        );
-    });
-
-    return matchingDoc || null;
+    return null;
 };
 
 const handleAdminLogin = async (email, name = null) => {
@@ -161,19 +135,6 @@ const handleAdminLogin = async (email, name = null) => {
 
         const normalizedEmail =
             email.toLowerCase();
-
-        await setDoc(
-            doc(db, "admins", normalizedEmail),
-            {
-                name: name || admin.name || normalizedEmail,
-                email: normalizedEmail,
-                role,
-                active: true,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp()
-            },
-            { merge: true }
-        );
 
         localStorage.setItem(
             "adminRole",
