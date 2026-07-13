@@ -103,75 +103,12 @@ const googleSignInBtn =
 document.getElementById("googleSignInBtn");
 
 // Common function to check admin and login
-const getAdminSnapshotByEmail = async (email) => {
-    const lowerEmail = email.toLowerCase();
-    const directDoc = await getDoc(doc(db, "admins", lowerEmail));
+const getAdminSnapshotByUID = async (uid) => {
+    const adminDoc = await getDoc(doc(db, "admins", uid));
 
-    if (directDoc.exists()) {
-        return directDoc;
-    }
-
-    return null;
+    return adminDoc.exists() ? adminDoc : null;
 };
 
-const handleAdminLogin = async (email, name = null) => {
-    try {
-        const adminSnapshot = await getAdminSnapshotByEmail(email);
-        const isAdmin = adminSnapshot && adminSnapshot.exists();
-
-        if (!isAdmin) {
-            message.style.color = "red";
-            message.textContent = "Access denied. Your account is not authorized in Firestore admins.";
-            return false;
-        }
-
-        const admin =
-            isAdmin
-            ? adminSnapshot.data()
-            : {};
-
-        const role =
-            admin.role || "admin";
-
-        const normalizedEmail =
-            email.toLowerCase();
-
-        localStorage.setItem(
-            "adminRole",
-            role
-        );
-
-        localStorage.setItem(
-            "adminEmail",
-            email
-        );
-
-        if(name){
-            localStorage.setItem(
-                "adminName",
-                name
-            );
-        }
-
-        message.style.color =
-            "green";
-
-        message.textContent =
-            "Login successful...";
-
-        setTimeout(()=>{
-            window.location.href =
-                "/admin.html";
-        }, 1000);
-
-        return true;
-    } catch (error) {
-        console.error("Admin check error:", error);
-        message.style.color = "red";
-        message.textContent = "An error occurred. Please try again.";
-        return false;
-    }
-};
 
 // Email/Password Sign In
 form.addEventListener(
@@ -212,7 +149,7 @@ form.addEventListener(
                 return;
             }
 
-            await handleAdminLogin(email);
+            await handleAdminLogin(userCredential.user);
 
         }
         catch(error){
@@ -261,7 +198,7 @@ googleSignInBtn.addEventListener(
                 return;
             }
 
-            await handleAdminLogin(email, displayName);
+            await handleAdminLogin(user);
 
         } catch (error) {
             console.error("Google Sign-In Error:", error);
