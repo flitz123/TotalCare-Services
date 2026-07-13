@@ -149,7 +149,7 @@ form.addEventListener(
                 return;
             }
 
-            await handleAdminLogin(userCredential.user);
+            await handleAdminLogin(email);
 
         }
         catch(error){
@@ -198,25 +198,22 @@ googleSignInBtn.addEventListener(
                 return;
             }
 
-            await handleAdminLogin(user);
+            
 
         } catch (error) {
+
             console.error("Google Sign-In Error:", error);
+
+            alert(JSON.stringify({
+                code: error.code,
+                message: error.message,
+                customData: error.customData
+            }, null, 2));
+
             message.style.color = "red";
-            
-            if(error.code === "auth/popup-blocked"){
-                message.textContent = "Sign-in popup was blocked. Please allow popups and try again.";
+            message.textContent = error.message;
+
             }
-            else if(error.code === "auth/cancelled-popup-request"){
-                message.textContent = "Sign-in was cancelled.";
-            }
-            else if(error.code === "auth/unauthorized-domain"){
-                message.textContent = "This domain is not authorized for Google sign-in. Add your site domain in Firebase Auth settings.";
-            }
-            else{
-                message.textContent = `Google Sign-In failed: ${error.message || error.code}`;
-            }
-        }
     }
 );
 
