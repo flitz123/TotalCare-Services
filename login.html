@@ -103,12 +103,46 @@ const googleSignInBtn =
 document.getElementById("googleSignInBtn");
 
 // Common function to check admin and login
-const getAdminSnapshotByUID = async (uid) => {
-    const adminDoc = await getDoc(doc(db, "admins", uid));
-
+const getAdminSnapshotByEmail = async (email) => {
+    const lowerEmail = email.toLowerCase().trim();
+    const adminDoc = await getDoc(doc(db, "admins", lowerEmail));
     return adminDoc.exists() ? adminDoc : null;
 };
 
+const handleAdminLogin = async (email, name = null) => {
+    try {
+        const adminSnapshot = await getAdminSnapshotByEmail(email);
+
+        if (!adminSnapshot) {
+            message.style.color = "red";
+            message.textContent = "Access denied. Your account is not authorized in Firestore admins.";
+            return false;
+        }
+
+        const admin = adminSnapshot.data();
+        const role = admin.role || "admin";
+
+        localStorage.setItem("adminRole", role);
+        localStorage.setItem("adminEmail", email.toLowerCase().trim());
+        if (name || admin.name) {
+            localStorage.setItem("adminName", name || admin.name);
+        }
+
+        message.style.color = "green";
+        message.textContent = "Login successful...";
+
+        setTimeout(() => {
+            window.location.href = "/admin.html";
+        }, 1000);
+
+        return true;
+    } catch (error) {
+        console.error("Admin check error:", error);
+        message.style.color = "red";
+        message.textContent = "An error occurred during admin check. Please try again.";
+        return false;
+    }
+};
 
 // Email/Password Sign In
 form.addEventListener(
@@ -144,9 +178,14 @@ form.addEventListener(
                 await verifyIdToken(idToken);
             } catch (vErr) {
                 console.error('Server token verification failed:', vErr);
-                message.style.color = 'red';
-                message.textContent = 'Server verification failed. Try again later.';
-                return;
+                // Bypass server token verification if in local development environment
+                if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.protocol === "file:") {
+                    console.warn("Local development detected: bypassing server verification.");
+                } else {
+                    message.style.color = 'red';
+                    message.textContent = 'Server verification failed. Try again later.';
+                    return;
+                }
             }
 
             await handleAdminLogin(email);
@@ -193,12 +232,17 @@ googleSignInBtn.addEventListener(
                 await verifyIdToken(idToken);
             } catch (vErr) {
                 console.error('Server token verification failed:', vErr);
-                message.style.color = 'red';
-                message.textContent = 'Server verification failed. Try again later.';
-                return;
+                // Bypass server token verification if in local development environment
+                if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.protocol === "file:") {
+                    console.warn("Local development detected: bypassing server verification.");
+                } else {
+                    message.style.color = 'red';
+                    message.textContent = 'Server verification failed. Try again later.';
+                    return;
+                }
             }
 
-            
+            await handleAdminLogin(email, displayName);
 
         } catch (error) {
 

@@ -38,7 +38,12 @@ if (admin) {
   } else {
     let serviceAccount;
     try {
-      serviceAccount = JSON.parse(serviceAccountJson);
+      let cleanedJson = serviceAccountJson.trim();
+      if ((cleanedJson.startsWith("'") && cleanedJson.endsWith("'")) || 
+          (cleanedJson.startsWith('"') && cleanedJson.endsWith('"'))) {
+        cleanedJson = cleanedJson.slice(1, -1);
+      }
+      serviceAccount = JSON.parse(cleanedJson);
     } catch (err) {
       module.exports = (req, res) => {
         res.status(500).json({ error: 'Failed to parse FIREBASE_SERVICE_ACCOUNT JSON: ' + String(err.message) });
