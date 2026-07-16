@@ -1187,45 +1187,52 @@ document
 
 );
 
-async function uploadImages(){
+async function uploadImages() {
 
     const urls = [];
 
-    for(const file of selectedFiles){
+    console.log("Uploading", selectedFiles.length, "files");
 
-        const fileName =
+    for (const file of selectedFiles) {
 
-        Date.now() +
-        "-" +
-        file.name;
+        console.log("Uploading:", file.name);
 
-        const storageRef =
-
-        ref(
-
+        const storageRef = ref(
             storage,
-
-            `products/${fileName}`
-
+            `products/${Date.now()}-${file.name}`
         );
 
-        await uploadBytes(
+        try {
 
-            storageRef,
+            console.log("Calling uploadBytes...");
 
-            file
+            const result = await uploadBytes(
+                storageRef,
+                file
+            );
 
-        );
+            console.log("Upload finished", result);
 
-        const url =
+            console.log("Getting download URL...");
 
-        await getDownloadURL(
-            storageRef
-        );
+            const url = await getDownloadURL(storageRef);
 
-        urls.push(url);
+            console.log("URL:", url);
+
+            urls.push(url);
+
+        }
+        catch(err){
+
+            console.error("UPLOAD FAILED", err);
+
+            throw err;
+
+        }
 
     }
+
+    console.log("Finished uploading");
 
     return urls;
 
