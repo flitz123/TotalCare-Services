@@ -1,210 +1,337 @@
 import {
     auth,
-    db,
-    storage
-}
-from "./firebase-config.js";
+    db
+} from "./firebase-config.js";
 
 import {
-    onAuthStateChanged
-}
-from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-import {
     collection,
-    doc,
     addDoc,
     updateDoc,
     deleteDoc,
-    setDoc,
-    serverTimestamp,
-    getDocs,
-    onSnapshot,
+    getDoc,
+    doc,
     query,
-    orderBy
-}
-from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    orderBy,
+    onSnapshot,
+    serverTimestamp
+
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 import {
-    ref,
-    uploadBytes,
-    getDownloadURL
-}
-from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+    signOut,
+    onAuthStateChanged
+
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+const CLOUDINARY_CLOUD_NAME = "YOUR_CLOUD_NAME";
+
+const CLOUDINARY_UPLOAD_PRESET = "YOUR_UPLOAD_PRESET";
+
+const CLOUDINARY_URL =
+`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
 
 let products = [];
 
 let filteredProducts = [];
 
-let orders = [];
-
-let admins = [];
+let selectedFiles = [];
 
 let editingProductId = null;
 
+let currentPage = 1;
+
+const productsPerPage = 10;
+
+const productForm =
+document.getElementById("productForm");
+
 const productTableBody =
-document.getElementById(
-    "productTableBody"
-);
+document.getElementById("productTableBody");
 
-const ordersTableBody =
-document.getElementById(
-    "ordersTableBody"
-);
+const productImages =
+document.getElementById("productImages");
 
-const adminTableBody =
-document.getElementById(
-    "adminTableBody"
-);
+const imagePreview =
+document.getElementById("imagePreview");
 
-const productSearch =
-document.getElementById(
-    "productSearch"
-);
+const uploadProgress =
+document.getElementById("uploadProgress");
 
-const orderSearch =
-document.getElementById(
-    "orderSearch"
-);
+const uploadBar =
+document.getElementById("uploadBar");
 
-const productCount =
-document.getElementById(
-    "productCount"
-);
+const uploadStatus =
+document.getElementById("uploadStatus");
 
-const orderCount =
-document.getElementById(
-    "orderCount"
-);
+const searchInput =
+document.getElementById("searchInput");
 
-const revenue =
-document.getElementById(
-    "revenue"
-);
+const logoutBtn =
+document.getElementById("logoutBtn");
 
-const pendingOrders =
-document.getElementById(
-    "pendingOrders"
-);
+onAuthStateChanged(auth, (user)=>{
 
-const todayRevenue =
-document.getElementById(
-    "todayRevenue"
-);
+    if(!user){
 
-const monthlyRevenue =
-document.getElementById(
-    "monthlyRevenue"
-);
+        window.location.href = "/login.html";
 
-const completedOrders =
-document.getElementById(
-    "completedOrders"
-);
+        return;
 
-const cancelledOrders =
-document.getElementById(
-    "cancelledOrders"
-);
+    }
 
-onAuthStateChanged(
+});
 
-    auth,
+function showSuccess(message){
 
-    async (user)=>{
+    Swal.fire({
 
-        if(!user){
+        icon:"success",
 
-            window.location.href =
-            "/login.html";
+        title:"Success",
 
-            return;
+        text:message,
+
+        timer:1800,
+
+        showConfirmButton:false
+
+    });
+
+}
+
+function showError(message){
+
+    Swal.fire({
+
+        icon:"error",
+
+        title:"Oops...",
+
+        text:message
+
+    });
+
+}
+
+function showLoading(message="Please wait..."){
+
+    Swal.fire({
+
+        title:message,
+
+        allowOutsideClick:false,
+
+        didOpen:()=>{
+
+            Swal.showLoading();
+
         }
 
-        await initializeDashboard();
+    });
+
+}
+
+function closeLoading(){
+
+    Swal.close();
+
+}
+
+logoutBtn?.addEventListener(
+
+    "click",
+
+    async ()=>{
+
+        await signOut(auth);
+
+        window.location.href="/login.html";
 
     }
 
 );
 
-async function initializeDashboard(){
+productImages.addEventListener(
 
-    await ensureCurrentAdminDoc();
+    "change",
 
-    loadProducts();
+    ()=>{
 
-    loadOrders();
+        selectedFiles = [...productImages.files];
 
-    loadAdmins();
+        imagePreview.innerHTML = "";
 
-    setupSearch();
+        selectedFiles.forEach(file=>{
 
-    setupSidebar();
+            const reader = new FileReader();
 
-}
+            reader.onload = e=>{
 
-async function ensureCurrentAdminDoc(){
+                const img =
+                document.createElement("img");
 
-    const user = auth.currentUser;
+                img.src = e.target.result;
 
-    if(!user?.email){
-        return;
+                img.className = "preview-image";
+
+                imagePreview.appendChild(img);
+
+            };
+
+            reader.readAsDataURL(file);
+
+        });
+
     }
 
-    const normalizedEmail = user.email.trim().toLowerCase();
+);
 
-    try{
+async function uploadImagesToCloudinary(){
 
-        await setDoc(
-            doc(db, "admins", normalizedEmail),
-            {
-                name: user.displayName || normalizedEmail,
-                email: normalizedEmail,
-                role: "admin",
-                active: true,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp()
-            },
-            { merge: true }
+    const uploadedUrls = [];
+
+    if(selectedFiles.length===0){
+
+        return uploadedUrls;
+
+    }
+
+    uploadProgress.style.display="block";
+
+    uploadBar.value=0;
+
+    uploadStatus.innerHTML="Uploading images...";
+
+    let completed = 0;
+
+    for(const file of selectedFiles){
+
+        const formData = new FormData();
+
+        formData.append(
+
+            "file",
+
+            file
+
         );
 
-    }
-    catch(error){
+        formData.append(
 
-        console.warn("Unable to sync admin record:", error);
+            "upload_preset",
 
-    }
+            CLOUDINARY_UPLOAD_PRESET
 
-}
+        );
 
-function setupSidebar(){
+        try{
 
-    const menuToggle =
-    document.getElementById(
-        "menuToggle"
-    );
+            const response = await fetch(
 
-    const sidebar =
-    document.getElementById(
-        "adminSidebar"
-    );
+                CLOUDINARY_URL,
 
-    if(menuToggle){
+                {
 
-        menuToggle.addEventListener(
-            "click",
-            ()=>{
+                    method:"POST",
 
-                sidebar.classList.toggle(
-                    "active"
-                );
+                    body:formData
+
+                }
+
+            );
+
+            if(!response.ok){
+
+                throw new Error("Cloudinary upload failed.");
 
             }
-        );
+
+            const data = await response.json();
+
+            uploadedUrls.push(data.secure_url);
+
+            completed++;
+
+            uploadBar.value =
+            (completed/selectedFiles.length)*100;
+
+            uploadStatus.innerHTML =
+            `Uploaded ${completed} of ${selectedFiles.length}`;
+
+        }
+
+        catch(error){
+
+            console.error(error);
+
+            showError(
+
+                "Image upload failed."
+
+            );
+
+            throw error;
+
+        }
 
     }
 
+    uploadStatus.innerHTML="Upload complete.";
+
+    setTimeout(()=>{
+
+        uploadProgress.style.display="none";
+
+    },1000);
+
+    return uploadedUrls;
+
 }
+
+function resetProductForm(){
+
+    productForm.reset();
+
+    selectedFiles=[];
+
+    editingProductId=null;
+
+    imagePreview.innerHTML="";
+
+}
+
+function getFormValues(){
+
+    return{
+
+        name:
+        document.getElementById("productName").value.trim(),
+
+        category:
+        document.getElementById("productCategory").value.trim(),
+
+        description:
+        document.getElementById("productDescription").value.trim(),
+
+        price:Number(
+
+            document.getElementById("productPrice").value
+
+        ),
+
+        stock:Number(
+
+            document.getElementById("productStock").value
+
+        )
+
+    };
+
+}
+
+// PRODUCT MANAGEMENT FUNCTIONS
 
 function loadProducts(){
 
@@ -359,9 +486,9 @@ function renderProducts(){
 
 function setupSearch(){
 
-    if(productSearch){
+    if(searchInput){
 
-        productSearch
+        searchInput
         .addEventListener(
 
             "input",
@@ -370,7 +497,7 @@ function setupSearch(){
 
                 const value =
 
-                productSearch
+                searchInput
                 .value
                 .toLowerCase();
 
@@ -401,23 +528,6 @@ function setupSearch(){
                 );
 
                 renderProducts();
-
-            }
-
-        );
-
-    }
-
-    if(orderSearch){
-
-        orderSearch
-        .addEventListener(
-
-            "input",
-
-            ()=>{
-
-                renderOrders();
 
             }
 
@@ -613,134 +723,6 @@ function updateAnalytics(){
 
 }
 
-const productForm =
-document.getElementById(
-    "productForm"
-);
-
-const imageInput =
-document.getElementById(
-    "productImages"
-);
-
-const imagePreview =
-document.getElementById(
-    "imagePreview"
-);
-
-let selectedFiles = [];
-
-if(imageInput){
-
-    imageInput.addEventListener(
-        "change",
-        previewImages
-    );
-
-}
-
-function previewImages(){
-
-    selectedFiles =
-    [...imageInput.files];
-
-    imagePreview.innerHTML = "";
-
-    selectedFiles.forEach(file=>{
-
-        const reader =
-        new FileReader();
-
-        reader.onload =
-        function(e){
-
-            const img =
-            document.createElement(
-                "img"
-            );
-
-            img.src =
-            e.target.result;
-
-            img.style.width =
-            "100px";
-
-            img.style.height =
-            "100px";
-
-            img.style.objectFit =
-            "cover";
-
-            img.style.borderRadius =
-            "10px";
-
-            img.style.margin =
-            "5px";
-
-            imagePreview
-            .appendChild(img);
-
-        };
-
-        reader.readAsDataURL(
-            file
-        );
-
-    });
-
-}
-
-if(productForm){
-
-    productForm.addEventListener(
-
-        "submit",
-
-        async (e)=>{
-
-            e.preventDefault();
-
-            try{
-
-                showLoader();
-
-                if(
-                    editingProductId
-                ){
-
-                    await updateProduct();
-
-                }
-                else{
-
-                    await createProduct();
-
-                }
-
-                hideLoader();
-
-            }
-            catch(error){
-
-                console.error(
-                    error
-                );
-
-                hideLoader();
-
-                showToast(
-                    "Operation failed",
-                    "error"
-                );
-
-            }
-
-        }
-
-    );
-
-}
-
 async function createProduct(){
 
     let imageUrls = [];
@@ -750,7 +732,7 @@ async function createProduct(){
         try{
 
             imageUrls =
-            await uploadImages();
+            await uploadImagesToCloudinary();
 
         }
         catch(error){
@@ -866,7 +848,7 @@ async function updateProduct(){
         try{
 
             imageUrls =
-            await uploadImages();
+            await uploadImagesToCloudinary();
 
         }
         catch(error){
@@ -1186,57 +1168,6 @@ document
     }
 
 );
-
-async function uploadImages() {
-
-    const urls = [];
-
-    console.log("Uploading", selectedFiles.length, "files");
-
-    for (const file of selectedFiles) {
-
-        console.log("Uploading:", file.name);
-
-        const storageRef = ref(
-            storage,
-            `products/${Date.now()}-${file.name}`
-        );
-
-        try {
-
-            console.log("Calling uploadBytes...");
-
-            const result = await uploadBytes(
-                storageRef,
-                file
-            );
-
-            console.log("Upload finished", result);
-
-            console.log("Getting download URL...");
-
-            const url = await getDownloadURL(storageRef);
-
-            console.log("URL:", url);
-
-            urls.push(url);
-
-        }
-        catch(err){
-
-            console.error("UPLOAD FAILED", err);
-
-            throw err;
-
-        }
-
-    }
-
-    console.log("Finished uploading");
-
-    return urls;
-
-}
 
 const ORDER_STATUSES = [
     "Pending",
