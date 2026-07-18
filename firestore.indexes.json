@@ -1,4 +1,9 @@
 {
-  "indexes": [],
+  "indexes": [
+    category,
+    price,
+    createdAt,
+    stock,
+  ],
   "fieldOverrides": []
 }

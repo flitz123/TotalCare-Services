@@ -1,14 +1,16 @@
-
 import { db } from "./firebase-config.js";
 
 import {
     collection,
     addDoc,
-    serverTimestamp
+    serverTimestamp,
+    getDoc,
+    doc
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const SELLER_PHONE = "254741675601";
 
+// Cart now stores only product IDs and quantities
 let cart =
 JSON.parse(
     localStorage.getItem("cart")
@@ -32,12 +34,13 @@ document.getElementById("cartBtn");
 const closeCartBtn =
 document.getElementById("closeCart");
 
+// Cache for product details
+let productCache = {};
+
 document.addEventListener(
     "DOMContentLoaded",
     () => {
-
         renderCart();
-
         setupCartUI();
     }
 );
@@ -49,11 +52,9 @@ function setupCartUI(){
         cartBtn.addEventListener(
             "click",
             () => {
-
                 cartSidebar.classList.add(
                     "active"
                 );
-
             }
         );
     }
@@ -63,11 +64,9 @@ function setupCartUI(){
         closeCartBtn.addEventListener(
             "click",
             () => {
-
                 cartSidebar.classList.remove(
                     "active"
                 );
-
             }
         );
     }
@@ -96,43 +95,55 @@ function saveCart(){
     updateCartCount();
 }
 
-function addToCart(
+async function getProductDetails(productId) {
+    // Check cache first
+    if (productCache[productId]) {
+        return productCache[productId];
+    }
+
+    try {
+        const docRef = doc(db, "products", productId);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            productCache[productId] = {
+                id: productId,
+                name: data.name || "Unknown Product",
+                price: data.price || 0,
+                images: data.images || []
+            };
+            return productCache[productId];
+        }
+        return null;
+    } catch (error) {
+        console.error("Error fetching product:", error);
+        return null;
+    }
+}
+
+async function addToCart(
     product,
     quantity = 1
 ){
-
+    // Find if product already in cart
     const existing =
     cart.find(
         item => item.id === product.id
     );
 
     if(existing){
-
         existing.quantity += quantity;
     }
     else{
-
         cart.push({
-
             id: product.id,
-
-            name: product.name,
-
-            price: product.price,
-
-            quantity,
-
-            image:
-            product.images?.[0] || ""
-
+            quantity: quantity
         });
-
     }
 
     saveCart();
-
-    renderCart();
-
+    await renderCart();
     showToast(
         `${product.name} added to cart`,
         "success"
@@ -143,20 +154,19 @@ function buyNow(
     product,
     quantity
 ){
-
     const message =
-`Hello TotalCare,
+`Hello TotalCare Engineering Services,
 
-I would like to purchase:
+I would like to order:
 
-Product: ${product.name}
-Quantity: ${quantity}
-Price: KES ${product.price}
+• ${product.name}
+Qty: ${quantity}
+Price: KES ${Number(product.price).toLocaleString()}
 
-Image:
+Product Image:
 ${product.images?.[0] || "No Image"}
 
-Please assist me with the order.`;
+Thank you.`;
 
     const url =
 `https://wa.me/${SELLER_PHONE}?text=${encodeURIComponent(message)}`;
@@ -175,7 +185,6 @@ function removeItem(id){
     );
 
     saveCart();
-
     renderCart();
 }
 
@@ -194,31 +203,22 @@ function changeQty(
     item.quantity += amount;
 
     if(item.quantity <= 0){
-
         removeItem(id);
-
         return;
     }
 
     saveCart();
-
     renderCart();
 }
 
 function getTotal(){
 
     return cart.reduce(
-
-        (sum,item)=>
-
-            sum +
-            (
-                item.price *
-                item.quantity
-            ),
-
+        (sum, item) => {
+            const product = productCache[item.id];
+            return sum + (product ? product.price * item.quantity : 0);
+        },
         0
-
     );
 }
 
@@ -228,20 +228,16 @@ function updateCartCount(){
 
     const totalItems =
     cart.reduce(
-
-        (sum,item)=>
-
+        (sum,item) =>
             sum + item.quantity,
-
         0
-
     );
 
     cartCount.textContent =
     totalItems;
 }
 
-function renderCart(){
+async function renderCart(){
 
     if(!cartContainer) return;
 
@@ -260,9 +256,7 @@ function renderCart(){
         `;
 
         if(cartTotal){
-
-            cartTotal.textContent =
-            "KES 0";
+            cartTotal.textContent = "KES 0";
         }
 
         return;
@@ -270,7 +264,18 @@ function renderCart(){
 
     cartContainer.innerHTML = "";
 
+    // Fetch all product details
+    for (const item of cart) {
+        await getProductDetails(item.id);
+    }
+
     cart.forEach(item => {
+        const product = productCache[item.id];
+        
+        if (!product) {
+            // Product not found, skip or show placeholder
+            return;
+        }
 
         const div =
         document.createElement("div");
@@ -278,21 +283,24 @@ function renderCart(){
         div.className =
         "cart-item";
 
+        const imageUrl = product.images?.[0] || "/assets/no-image.png";
+
         div.innerHTML = `
 
             <img
-            src="${item.image}"
-            alt="${item.name}"
+                src="${imageUrl}"
+                alt="${product.name}"
+                loading="lazy"
             >
 
             <div class="cart-details">
 
                 <h4>
-                    ${item.name}
+                    ${product.name}
                 </h4>
 
                 <div class="cart-price">
-                    KES ${Number(item.price)
+                    KES ${Number(product.price)
                     .toLocaleString()}
                 </div>
 
@@ -324,7 +332,6 @@ function renderCart(){
         `;
 
         cartContainer.appendChild(div);
-
     });
 
     attachCartEvents();
@@ -428,34 +435,38 @@ async function checkout(){
     }
 
     try{
+        // Fetch all product details for the order
+        const orderItems = [];
+        for (const item of cart) {
+            const product = await getProductDetails(item.id);
+            if (product) {
+                orderItems.push({
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    quantity: item.quantity,
+                    image: product.images?.[0] || ""
+                });
+            }
+        }
 
         const order = {
-
             customerName,
-
             customerPhone,
-
-            items: cart,
-
+            items: orderItems,
             total: getTotal(),
-
             status: "Pending",
-
             createdAt:
             serverTimestamp()
-
         };
 
         const docRef =
         await addDoc(
-
             collection(
                 db,
                 "orders"
             ),
-
             order
-
         );
 
         const orderId =
@@ -464,19 +475,22 @@ async function checkout(){
         await sendWhatsAppOrder(
             orderId,
             customerName,
-            customerPhone
+            customerPhone,
+            orderItems
         );
 
         cart = [];
-
         saveCart();
-
-        renderCart();
+        await renderCart();
 
         showToast(
             "Order placed successfully",
             "success"
         );
+
+        // Clear customer details
+        document.getElementById("customerName").value = "";
+        document.getElementById("customerPhone").value = "";
 
     }
     catch(error){
@@ -493,68 +507,50 @@ async function checkout(){
 }
 
 async function sendWhatsAppOrder(
-
     orderId,
-
     customerName,
-
-    customerPhone
-
+    customerPhone,
+    orderItems
 ){
 
     let text =
+`Hello TotalCare Engineering Services,
 
-`New Order
-
-Order ID:
-${orderId}
-
-Customer:
-${customerName}
-
-Phone:
-${customerPhone}
-
-Items:
+I would like to order:
 
 `;
 
-    cart.forEach(item => {
-
+    orderItems.forEach(item => {
         text +=
-
-`${item.name}
+`• ${item.name}
 Qty: ${item.quantity}
-KES ${item.price}
-
-Image:
-${item.image}
+Price: KES ${Number(item.price).toLocaleString()}
+Product Image: ${item.image || "No Image"}
 
 `;
-
     });
 
     text +=
-`Total:
-KES ${getTotal()}`;
+`Total: KES ${getTotal().toLocaleString()}
+
+Order ID: ${orderId}
+Customer: ${customerName}
+Phone: ${customerPhone}
+
+Thank you.`;
 
     const url =
-
 `https://wa.me/${SELLER_PHONE}?text=${encodeURIComponent(text)}`;
 
     window.open(
         url,
         "_blank"
     );
-
 }
 
 function showToast(
-
     message,
-
     type = "info"
-
 ){
 
     const toast =
@@ -570,19 +566,17 @@ function showToast(
     .appendChild(toast);
 
     setTimeout(()=>{
-
-        toast.classList.add(
-            "show"
-        );
-
+        toast.classList.add("show");
     },100);
 
     setTimeout(()=>{
-
         toast.remove();
-
     },3500);
+}
 
+// Function to clear product cache (useful when products are updated)
+function clearProductCache() {
+    productCache = {};
 }
 
 window.addToCart =
@@ -590,3 +584,6 @@ addToCart;
 
 window.buyNow =
 buyNow;
+
+window.clearProductCache =
+clearProductCache;

@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "private": true,
     "dependencies": {
+        "cloudinary": "^2.10.0",
         "firebase-admin": "^13.1.0"
     }
 }

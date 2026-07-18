@@ -4,7 +4,6 @@ import {
 } from "./firebase-config.js";
 
 import {
-
     collection,
     addDoc,
     updateDoc,
@@ -15,22 +14,28 @@ import {
     orderBy,
     onSnapshot,
     serverTimestamp
-
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 import {
-
     signOut,
     onAuthStateChanged
-
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-const CLOUDINARY_CLOUD_NAME = "YOUR_CLOUD_NAME";
+// Firebase Storage imports
+import {
+    getStorage,
+    ref,
+    uploadBytes,
+    getDownloadURL,
+    deleteObject
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
-const CLOUDINARY_UPLOAD_PRESET = "YOUR_UPLOAD_PRESET";
+// Cloudinary configuration - Replace with your actual Cloudinary credentials
+const CLOUDINARY_CLOUD_NAME = "aryywcad";
+const CLOUDINARY_UPLOAD_PRESET = "totalcare_products";
 
 const CLOUDINARY_URL =
-`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+`https://api.cloudinary.com/v1_1/${aryywcad}/image/upload`;
 
 let products = [];
 
@@ -188,6 +193,7 @@ productImages.addEventListener(
 
 );
 
+// Cloudinary Image Upload Function
 async function uploadImagesToCloudinary(){
 
     const uploadedUrls = [];
@@ -287,6 +293,95 @@ async function uploadImagesToCloudinary(){
     },1000);
 
     return uploadedUrls;
+
+}
+
+// Firebase Storage Upload Function (kept as fallback/alternative)
+async function uploadImages() {
+
+    const urls = [];
+
+    if(selectedFiles.length===0) return urls;
+
+    const storage = getStorage();
+
+    uploadProgress.style.display="block";
+
+    uploadBar.value=0;
+
+    uploadStatus.innerHTML="Uploading images to Firebase Storage...";
+
+    let completed = 0;
+
+    for (const file of selectedFiles) {
+
+        try {
+
+            const storageRef = ref(
+                storage,
+                `products/${Date.now()}-${file.name}`
+            );
+
+            const result = await uploadBytes(storageRef, file);
+
+            const url = await getDownloadURL(storageRef);
+
+            urls.push(url);
+
+            completed++;
+
+            uploadBar.value =
+            (completed/selectedFiles.length)*100;
+
+            uploadStatus.innerHTML =
+            `Uploaded ${completed} of ${selectedFiles.length}`;
+
+        } catch(err) {
+
+            console.error("Firebase Storage upload failed:", err);
+
+            showError("Firebase Storage upload failed.");
+
+            throw err;
+
+        }
+
+    }
+
+    uploadStatus.innerHTML="Upload complete.";
+
+    setTimeout(()=>{
+
+        uploadProgress.style.display="none";
+
+    },1000);
+
+    return urls;
+
+}
+
+// Function to delete an image from Firebase Storage
+async function deleteImageFromStorage(imageUrl) {
+
+    try {
+
+        const storage = getStorage();
+
+        const imageRef = ref(storage, imageUrl);
+
+        await deleteObject(imageRef);
+
+        console.log("Image deleted successfully:", imageUrl);
+
+        return true;
+
+    } catch(error) {
+
+        console.error("Failed to delete image:", error);
+
+        return false;
+
+    }
 
 }
 
@@ -731,6 +826,7 @@ async function createProduct(){
 
         try{
 
+            // Using Cloudinary for image upload
             imageUrls =
             await uploadImagesToCloudinary();
 
@@ -847,6 +943,7 @@ async function updateProduct(){
 
         try{
 
+            // Using Cloudinary for image upload
             imageUrls =
             await uploadImagesToCloudinary();
 

@@ -17,6 +17,9 @@
 <link rel="stylesheet"
 href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
+<!-- SweetAlert2 for beautiful alerts -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </head>
 
 <body>
@@ -210,45 +213,27 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
 
     </div>
 
-    <div class="store-toolbar">
+    <!-- Store Controls - Search and Category Filter -->
+    <div class="store-controls">
 
         <input
             type="text"
             id="searchInput"
-            placeholder="Search products..."
-        >
+            placeholder="Search products">
 
         <select id="categoryFilter">
 
-            <option value="">
-                All Categories
-            </option>
+            <option value="">All Categories</option>
 
         </select>
 
     </div>
 
-    <div id="productGrid" class="product-grid">
+    <!-- Product Grid -->
+    <div id="productGrid"></div>
 
-    </div>
-
-    <div class="pagination">
-
-        <button id="prevPage">
-
-            <i class="fa-solid fa-angle-left"></i>
-
-        </button>
-
-        <span id="pageInfo"></span>
-
-        <button id="nextPage">
-
-            <i class="fa-solid fa-angle-right"></i>
-
-        </button>
-
-    </div>
+    <!-- Pagination -->
+    <div id="pagination"></div>
 
 </section>
 
